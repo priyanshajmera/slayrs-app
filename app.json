@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Slayrs",
+    "slug": "slayrs",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/appLogo.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/appLogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.slayrs.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/appLogo.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.slayrs.app"
+    },
+    "web": {
+      "favicon": "./assets/appLogo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you upload images.",
+          "cameraPermission": "The app accesses your camera to let you take photos."
+        }
+      ],
+      "expo-font"
+    ],
+    "scheme": "slayrs",
+    "experiments": {
+      "tsconfigPaths": true,
+      "newArchEnabled": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
