@@ -292,31 +292,16 @@ const RateOutfit: React.FC = () => {
 
   const handleSubmitSelection = async () => {
     setIsLoading(true);
-    console.log('currentImage', currentImage);
-    // Check if currentImage is not null
-    if (!currentImage) {
-      console.error('No image selected');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const formDataToSend = new FormData();
-      const filename = currentImage.split('/').pop() || 'upload.jpg';
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      // Create a payload object instead of FormData
+      const payload = {
+        selectedClothes: selectedClothes.map((id) => {
+          const item = wardrobe.find((item) => item.id === id);
+          return item ? item.image_url : null;
+        }).filter(url => url !== null), // Filter out null values
+      };
 
-      formDataToSend.append('image', {
-        uri: Platform.OS === 'ios' ? currentImage.replace('file://', '') : currentImage,
-        name: filename,
-        type,
-      } as any);
-      const ratingResponse = await api.post<RatingResponse>('/rating/outfitrating', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Accept: 'application/json',
-        },
-      });
+      const ratingResponse = await api.post<RatingResponse>('/rating/wardroberating', payload);
 
       setAiRating(Number(ratingResponse.data.rating));
       setAiReview(ratingResponse.data.review);
@@ -492,8 +477,14 @@ const RateOutfit: React.FC = () => {
                       selectedClothes.length === 0 && styles.disabledGradient
                     ]}
                   >
-                    <Text style={styles.submitButtonText}>Rate My Selection</Text>
-                    <Ionicons name="star" size={18} color="#fff" />
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <>
+                        <Text style={styles.submitButtonText}>Rate My Selection</Text>
+                        <Ionicons name="star" size={18} color="#fff" />
+                      </>
+                    )}
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -518,11 +509,11 @@ const RateOutfit: React.FC = () => {
                 <Text style={styles.ratingTitle}>AI Rating</Text>
                 <View style={styles.ratingValueContainer}>
                   <Text style={styles.ratingValue}>{aiRating}</Text>
-                  <Text style={styles.ratingMax}>/10</Text>
+                  <Text style={styles.ratingMax}>/5</Text>
                 </View>
               </View>
               <View style={styles.ratingStars}>
-                {[...Array(10)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <Ionicons
                     key={i}
                     name={i < (aiRating || 0) ? "star" : "star-outline"}

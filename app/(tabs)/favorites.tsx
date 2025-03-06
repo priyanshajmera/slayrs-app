@@ -6,11 +6,28 @@ import { useRouter, useNavigation } from 'expo-router';
 import api from '../../utils/api';
 
 interface FavoriteOutfit {
-  id: number;
-  name: string;
-  image_url: string;
+  favorite_id: number;
+  user_id: number;
+  try_on_url: string;
   created_at: string;
-  items_count: number;
+  suggestion: string;
+  name: string;
+  top: {
+    id: number;
+    image_url: string;
+    category: string;
+    description: string;
+    tags: string;
+    subcategory: string;
+  };
+  bottom: {
+    id: number;
+    image_url: string;
+    category: string;
+    description: string;
+    tags: string;
+    subcategory: string;
+  };
 }
 
 export default function Favorites() {
@@ -19,6 +36,8 @@ export default function Favorites() {
   const [favorites, setFavorites] = useState<FavoriteOutfit[]>([]);
   const [pressed, setPressed] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedOutfit, setSelectedOutfit] = useState<FavoriteOutfit | null>(null);
+  const [expandedOutfitId, setExpandedOutfitId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchFavorites();
@@ -44,10 +63,15 @@ export default function Favorites() {
   const handleRemoveFavorite = async (id: number) => {
     try {
       await api.delete(`/favorites/${id}`);
-      setFavorites(prev => prev.filter(fav => fav.id !== id));
+      setFavorites(prev => prev.filter(fav => fav.favorite_id !== id));
     } catch (error) {
       console.error('Error removing favorite:', error);
     }
+  };
+
+  // Function to toggle the expanded state
+  const toggleExpand = (id: number) => {
+    setExpandedOutfitId(prev => (prev === id ? null : id));
   };
 
   return (
@@ -75,30 +99,48 @@ export default function Favorites() {
             <View style={styles.outfitsGrid}>
               {favorites.map((outfit) => (
                 <TouchableOpacity
-                  key={outfit.id}
-                  onPressIn={() => setPressed(outfit.id)}
+                  key={outfit.favorite_id}
+                  onPressIn={() => setPressed(outfit.favorite_id)}
                   onPressOut={() => setPressed(null)}
-                  onPress={() => router.push(`/outfit/${outfit.id}`)}
+                  onPress={() => toggleExpand(outfit.favorite_id)}
                   style={[
                     styles.outfitCard,
-                    pressed === outfit.id && styles.outfitCardPressed
+                    pressed === outfit.favorite_id && styles.outfitCardPressed
                   ]}
                 >
-                  <Image source={{ uri: outfit.image_url }} style={styles.outfitImage} />
+                  <Image source={{ uri: outfit.top.image_url }} style={styles.outfitImage} />
                   <View style={styles.outfitOverlay}>
                     <View>
                       <Text style={styles.outfitName}>{outfit.name}</Text>
                       <Text style={styles.outfitDetails}>
-                        {outfit.items_count} items • {new Date(outfit.created_at).toLocaleDateString()}
+                        {new Date(outfit.created_at).toLocaleDateString()}
                       </Text>
                     </View>
                     <TouchableOpacity
                       style={styles.removeButton}
-                      onPress={() => handleRemoveFavorite(outfit.id)}
+                      onPress={() => handleRemoveFavorite(outfit.favorite_id)}
                     >
                       <Ionicons name="heart" size={24} color="#B666D2" />
                     </TouchableOpacity>
                   </View>
+                  {expandedOutfitId === outfit.favorite_id && (
+                    <View style={styles.detailsContainer}>
+                      <Text style={styles.detailsTitle}>{outfit.name}</Text>
+                      <Image source={{ uri: outfit.top.image_url }} style={styles.detailsImage} />
+                      <Text style={styles.detailsText}>{outfit.top.description}</Text>
+                      <Text style={styles.detailsText}>Category: {outfit.top.category}</Text>
+                      <Text style={styles.detailsText}>Tags: {outfit.top.tags}</Text>
+                      {outfit.bottom.image_url && (
+                        <View>
+                          <Text style={styles.detailsTitle}>Bottom Outfit</Text>
+                          <Image source={{ uri: outfit.bottom.image_url }} style={styles.detailsImage} />
+                          <Text style={styles.detailsText}>{outfit.bottom.description}</Text>
+                          <Text style={styles.detailsText}>Category: {outfit.bottom.category}</Text>
+                          <Text style={styles.detailsText}>Tags: {outfit.bottom.tags}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
@@ -108,7 +150,7 @@ export default function Favorites() {
                 <Ionicons name="heart-outline" size={48} color="rgba(255, 255, 255, 0.3)" />
               </View>
               <Text style={styles.emptyText}>No favorite outfits yet</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.exploreButton}
                 onPress={() => router.push('/(tabs)/generate')}
               >
@@ -126,6 +168,32 @@ export default function Favorites() {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Display selected outfit details */}
+          {/* {selectedOutfit ? (
+            <ScrollView>
+              <View style={styles.detailsContainer}>
+                <Text style={styles.detailsTitle}>{selectedOutfit.name}</Text>
+                <Image source={{ uri: selectedOutfit.top.image_url }} style={styles.detailsImage} />
+                <Text style={styles.detailsText}>{selectedOutfit.top.description}</Text>
+                <Text style={styles.detailsText}>Category: {selectedOutfit.top.category}</Text>
+                <Text style={styles.detailsText}>Tags: {selectedOutfit.top.tags}</Text>
+                {selectedOutfit.bottom.image_url && (
+                  <View>
+                    <Text style={styles.detailsTitle}>Bottom Outfit</Text>
+                    <Image source={{ uri: selectedOutfit.bottom.image_url }} style={styles.detailsImage} />
+                    <Text style={styles.detailsText}>{selectedOutfit.bottom.description}</Text>
+                    <Text style={styles.detailsText}>Category: {selectedOutfit.bottom.category}</Text>
+                    <Text style={styles.detailsText}>Tags: {selectedOutfit.bottom.tags}</Text>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          ) : (
+            <View>
+              <Text>No outfit selected</Text>
+            </View>
+          )} */}
         </ScrollView>
       </LinearGradient>
     </View>
@@ -305,4 +373,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.2,
   },
+  detailsContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+
+  },
+  detailsImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  detailsText: {
+    fontSize: 16,
+    marginBottom: 5,
+
+  }
 }); 
