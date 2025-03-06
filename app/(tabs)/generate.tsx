@@ -20,19 +20,19 @@ const parameters: Parameter[] = [
     id: 'occasion',
     label: 'Occasion',
     icon: 'calendar-outline',
-    options: ['Casual', 'Work', 'Party', 'Date', 'Travel'],
+    options: ['Casual', 'Work', 'Party'],
   },
   {
     id: 'weather',
     label: 'Weather',
     icon: 'partly-sunny-outline',
-    options: ['Hot', 'Mild', 'Cold', 'Rainy'],
+    options: ['Hot', 'Rainy', 'Cold'],
   },
   {
     id: 'style',
     label: 'Style',
     icon: 'shirt-outline',
-    options: ['Classic', 'Minimalistic', 'Trendy', 'Streetwear', 'Formal'],
+    options: ['Classic', 'Minimalistic', 'Trendy'],
   },
   {
     id: 'timeOfDay',
@@ -83,6 +83,10 @@ export default function Generate() {
         occasion: '',
         style: '',
         weather: '',
+        timeOfDay: '',
+        layering: false,
+        description: '',
+        fit: '',
       });
       setOutfits([]);
       setError('');
@@ -92,10 +96,17 @@ export default function Generate() {
   }, [navigation]);
 
   const handleChange = (field: keyof GenerateFormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field] === value ? '' : value,
-    }));
+    if (field === 'layering') {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value === 'Yes',
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: prev[field] === value ? '' : value,
+      }));
+    }
   };
 
   const transformFormData = () => {
@@ -221,7 +232,45 @@ export default function Generate() {
                         style={styles.optionButton}
                         onPress={() => handleChange(param.id, option)}
                       >
-                        {formData[param.id] === option ? (
+                        {param.id === 'layering' 
+                          ? (
+                            (formData.layering && option === 'Yes') || (!formData.layering && option === 'No') 
+                            ? (
+                              <LinearGradient
+                                colors={['#A855F7', '#EC4899']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.optionGradient}
+                              >
+                                <View style={styles.optionContent}>
+                                  <Ionicons
+                                    name={param.icon}
+                                    size={13}
+                                    color="#ffffff"
+                                    style={styles.optionIcon}
+                                  />
+                                  <Text style={styles.selectedOptionText}>
+                                    {option}
+                                  </Text>
+                                </View>
+                              </LinearGradient>
+                            ) : (
+                              <View style={styles.unselectedOption}>
+                                <View style={styles.optionContent}>
+                                  <Ionicons
+                                    name={param.icon}
+                                    size={13}
+                                    color="rgba(255, 255, 255, 0.4)"
+                                    style={styles.optionIcon}
+                                  />
+                                  <Text style={styles.optionText}>
+                                    {option}
+                                  </Text>
+                                </View>
+                              </View>
+                            )
+                          )
+                          : formData[param.id] === option ? (
                           <LinearGradient
                             colors={['#A855F7', '#EC4899']}
                             start={{ x: 0, y: 0 }}
@@ -321,16 +370,16 @@ export default function Generate() {
             ) : outfits.length > 0 ? (
               <View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {outfits[currentOutfit].items.map((item, index) => (
-                    <View key={index} style={styles.outfitItem}>
-                      {item.clothId?.image_url && (
+                  {outfits[currentOutfit].items
+                    .filter(item => item.clothId && item.clothId.image_url)
+                    .map((item, index) => (
+                      <View key={index} style={styles.outfitItem}>
                         <Image
                           source={{ uri: item.clothId.image_url }}
                           style={styles.outfitImage}
                         />
-                      )}
-                    </View>
-                  ))}
+                      </View>
+                    ))}
                 </ScrollView>
                 
                 {showStyleDescription ? (
